@@ -1,70 +1,27 @@
 'use client';
 
-import { useState } from 'react';
-import { BarChart, Card, Divider, Switch } from '@tremor/react';
+import { useState, useEffect } from 'react';
+import { BarChart, Card, TextInput } from '@tremor/react';
 
-const data = [
-  {
-    date: 'Jan 23',
-    'This Year': 68560,
-    'Last Year': 28560,
-  },
-  {
-    date: 'Feb 23',
-    'This Year': 70320,
-    'Last Year': 30320,
-  },
-  {
-    date: 'Mar 23',
-    'This Year': 80233,
-    'Last Year': 70233,
-  },
-  {
-    date: 'Apr 23',
-    'This Year': 55123,
-    'Last Year': 45123,
-  },
-  {
-    date: 'May 23',
-    'This Year': 56000,
-    'Last Year': 80600,
-  },
-  {
-    date: 'Jun 23',
-    'This Year': 100000,
-    'Last Year': 85390,
-  },
-  {
-    date: 'Jul 23',
-    'This Year': 85390,
-    'Last Year': 45340,
-  },
-  {
-    date: 'Aug 23',
-    'This Year': 80100,
-    'Last Year': 70120,
-  },
-  {
-    date: 'Sep 23',
-    'This Year': 75090,
-    'Last Year': 69450,
-  },
-  {
-    date: 'Oct 23',
-    'This Year': 71080,
-    'Last Year': 63345,
-  },
-  {
-    date: 'Nov 23',
-    'This Year': 61210,
-    'Last Year': 100330,
-  },
-  {
-    date: 'Dec 23',
-    'This Year': 60143,
-    'Last Year': 45321,
-  },
-];
+function getNext12MonthNamesWithYear() {
+  var now = new Date();
+  var month = now.getMonth();
+  var year = now.getFullYear();
+
+  var names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+               'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+
+  var res = [];
+  for (var i = 0; i < 13; ++i) {
+      res.push(names[month] + ' ' + year);
+      if (++month === 12) {
+          month = 0;
+          ++year;
+      }
+  }
+  return res;
+}
+
 
 function valueFormatter(number: number) {
   const formatter = new Intl.NumberFormat('en-US', {
@@ -77,59 +34,177 @@ function valueFormatter(number: number) {
 
   return formatter.format(number);
 }
+function getRevenueForecast(
+  adSpend: number, 
+  leadAcquisitionCost: number, 
+  leadToUserConversionRate: number, 
+  paidUserConversionRate: number, 
+  chargePerUser: number
+) {
+  if (!adSpend || !leadAcquisitionCost || !leadToUserConversionRate) return 0;
+  return adSpend + leadAcquisitionCost + leadToUserConversionRate;
+}
+
+const dates = getNext12MonthNamesWithYear();
+
+const data = [
+  {
+    date: dates[0],
+    amount: 0
+  },
+  {
+    date: dates[1],
+    amount: 0
+  },
+  {
+    date: dates[2],
+    amount: 0
+  },
+  {
+    date: dates[3],
+    amount: 0
+  },
+  {
+    date: dates[4],
+    amount: 0
+  },
+  {
+    date: dates[5],
+    amount: 0
+  },
+  {
+    date: dates[6],
+    amount: 0
+  },
+  {
+    date: dates[7],
+    amount: 0
+  },
+  {
+    date: dates[8],
+    amount: 0
+  },
+  {
+    date: dates[9],
+    amount: 0
+  },
+  {
+    date: dates[10],
+    amount: 0
+  },
+  {
+    date: dates[11],
+    amount: 0
+  },
+];
 
 export default function SalesBarChart() {
-  const [showComparison, setShowComparison] = useState(false);
+  const [leadCost, setLeadCost] = useState<string>('');
+  const [conversionRate, setConversionRate] = useState<string>('');
+  const [adSpend, setAdSpend] = useState<string>('');
+  const [selectedValue, setSelectedValue] = useState<number | null>(null);
+  const [chartData, setChartData] = useState(data); // Initial data
+
+  useEffect(() => {
+    if (leadCost && conversionRate) {
+      const newData = dates.reduce((acc, date, index) => {
+        const prevAmount = index === 0 ? parseFloat(adSpend || '0') : acc[index - 1].amount;
+        const amount = getRevenueForecast(
+          prevAmount,  // Use previous month's result as ad spend
+          parseFloat(leadCost),
+          parseFloat(conversionRate),
+          0.5,
+          99
+        );
+        acc.push({ date, amount });
+        return acc;
+      }, [] as { date: string; amount: number }[]);
+
+      setChartData(newData);
+    }
+  }, [leadCost, conversionRate, adSpend]);
+
   return (
     <>
       <Card className="sm:mx-auto sm:max-w-7xl">
         <h3 className="ml-1 mr-1 font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
-          Sales overview
+          Revenue Forecast
         </h3>
-        <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-          Some Chart For Some Random Startup
-        </p>
-        <div className="bg-gray-900 p-4">
+        
+        <div className="mt-4 mb-6 flex flex-col sm:flex-row gap-4">
+          <TextInput
+            placeholder="Enter ad spend"
+            value={adSpend}
+            onChange={(e) => setAdSpend(e.target.value)}
+            type="number"
+            min="0"
+            step="0.01"
+            icon={() => "$"}
+            className="flex-1"
+          />
+          <TextInput
+            placeholder="Enter lead acquisition cost"
+            value={leadCost}
+            onChange={(e) => setLeadCost(e.target.value)}
+            type="number"
+            min="0"
+            step="0.01"
+            icon={() => "$"}
+            className="flex-1"
+          />
+          <TextInput
+            placeholder="Enter Lead User Conversion Rate"
+            value={conversionRate}
+            onChange={(e) => setConversionRate(e.target.value)}
+            type="number"
+            min="0"
+            max="100"
+            step="0.1"
+            icon={() => "%"}
+            className="flex-1"
+          />
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
           <BarChart
-            data={data}
+            data={chartData}
             index="date"
-            categories={
-              showComparison ? ['Last Year', 'This Year'] : ['This Year']
-            }
-            colors={["#3B82F6", "#6366F1"]}
+            categories={['amount']}
+            colors={["#3B82F6"]}
             valueFormatter={valueFormatter}
             yAxisWidth={65}
+            onValueChange={(v) => setSelectedValue(v?.amount as number)}
+            showTooltip={true}
+            showLegend={false}
             style={{ 
               '--tw-ring-color': 'rgb(59, 130, 246)',
               fill: 'rgb(59, 130, 246)'
             } as React.CSSProperties}
-            className="mt-6 hidden h-96 sm:block [&_rect]:fill-blue-500"
+            className="mt-6 hidden h-96 sm:block [&_rect]:fill-blue-500 text-gray-600 dark:text-gray-200"
+            customTooltip={(props) => (
+              <div className="p-2 bg-white dark:bg-gray-800 shadow rounded">
+                {valueFormatter(props?.payload?.[0]?.value as number)}
+              </div>
+            )}
           />
         </div>
         <BarChart
-          data={data}
+          data={chartData}
           index="date"
-          categories={
-            showComparison ? ['Last Year', 'This Year'] : ['This Year']
-          }
-          colors={["#3B82F6", "#6366F1"]}
+          categories={['amount']}
+          colors={["#3B82F6"]}
           valueFormatter={valueFormatter}
+          showTooltip={true}
+          showLegend={false}
+          onValueChange={(v) => setSelectedValue(v?.amount as number)}
           showYAxis={false}
-          className="mt-4 h-72 sm:hidden text-white bg-gray-900"
+          className="mt-4 h-72 sm:hidden bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-200 rounded-lg"
+          customTooltip={(props) => (
+            <div className="p-2 bg-white dark:bg-gray-800 shadow rounded">
+              {valueFormatter(props?.payload?.[0]?.value as number)}
+            </div>
+          )}
         />
-        <Divider />
-        <div className="mb-2 flex items-center space-x-3">
-          <Switch
-            id="comparison"
-            onChange={() => setShowComparison(!showComparison)}
-          />
-          <label
-            htmlFor="comparison"
-            className="text-tremor-default text-tremor-content dark:text-dark-tremor-content"
-          >
-            Show same period last year
-          </label>
-        </div>
       </Card>
     </>
   );
