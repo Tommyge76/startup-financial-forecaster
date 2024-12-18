@@ -23,11 +23,10 @@ function getNext12MonthNamesWithYear() {
 }
 
 
-function valueFormatter(number: number) {
+function valueFormatter(number: number, compact: boolean = true) {
   const formatter = new Intl.NumberFormat('en-US', {
-    maximumFractionDigits: 0,
-    notation: 'compact',
-    compactDisplay: 'short',
+    maximumFractionDigits: 2,
+    notation: compact ? 'compact' : 'standard',
     style: 'currency',
     currency: 'USD',
   });
@@ -41,8 +40,23 @@ function getRevenueForecast(
   paidUserConversionRate: number, 
   chargePerUser: number
 ) {
-  if (!adSpend || !leadAcquisitionCost || !leadToUserConversionRate) return 0;
-  return adSpend + leadAcquisitionCost + leadToUserConversionRate;
+  if (!adSpend || !leadAcquisitionCost || leadAcquisitionCost == 0 || !leadToUserConversionRate || !paidUserConversionRate || !chargePerUser) return 0;
+  
+  const numberOfLeads = adSpend / leadAcquisitionCost;
+  const numberOfUsers = numberOfLeads * (leadToUserConversionRate / 100) * (paidUserConversionRate / 100);
+  const revenue = numberOfUsers * chargePerUser;
+  
+  return revenue;
+}
+
+function getNextMonthRevenue(
+  previousRevenue: number,
+  leadAcquisitionCost: number,
+  leadToUserConversionRate: number,
+  paidUserConversionRate: number,
+  chargePerUser: number
+) {
+  return previousRevenue * 1.1;
 }
 
 const dates = getNext12MonthNamesWithYear();
@@ -98,31 +112,41 @@ const data = [
   },
 ];
 
-export default function SalesBarChart() {
+export default function RevenueBarChart() {
   const [leadCost, setLeadCost] = useState<string>('');
   const [conversionRate, setConversionRate] = useState<string>('');
   const [adSpend, setAdSpend] = useState<string>('');
+  const [paidConversionRate, setPaidConversionRate] = useState<string>('');
+  const [chargePerUser, setChargePerUser] = useState<string>('');
   const [selectedValue, setSelectedValue] = useState<number | null>(null);
   const [chartData, setChartData] = useState(data); // Initial data
 
   useEffect(() => {
     if (leadCost && conversionRate) {
       const newData = dates.reduce((acc, date, index) => {
-        const prevAmount = index === 0 ? parseFloat(adSpend || '0') : acc[index - 1].amount;
-        const amount = getRevenueForecast(
-          prevAmount,  // Use previous month's result as ad spend
-          parseFloat(leadCost),
-          parseFloat(conversionRate),
-          0.5,
-          99
-        );
+        const amount = index === 0 
+          ? getRevenueForecast(
+              parseFloat(adSpend || '0'),
+              parseFloat(leadCost),
+              parseFloat(conversionRate),
+              parseFloat(paidConversionRate),
+              parseFloat(chargePerUser)
+            )
+          : getNextMonthRevenue(
+              acc[index - 1].amount,
+              parseFloat(leadCost),
+              parseFloat(conversionRate),
+              parseFloat(paidConversionRate),
+              parseFloat(chargePerUser)
+            );
+        
         acc.push({ date, amount });
         return acc;
       }, [] as { date: string; amount: number }[]);
 
       setChartData(newData);
     }
-  }, [leadCost, conversionRate, adSpend]);
+  }, [leadCost, conversionRate, adSpend, paidConversionRate, chargePerUser]);
 
   return (
     <>
@@ -163,6 +187,27 @@ export default function SalesBarChart() {
             icon={() => "%"}
             className="flex-1"
           />
+          <TextInput
+            placeholder="Enter Paid User Conversion Rate"
+            value={paidConversionRate}
+            onChange={(e) => setPaidConversionRate(e.target.value)}
+            type="number"
+            min="0"
+            max="100"
+            step="0.1"
+            icon={() => "%"}
+            className="flex-1"
+          />
+          <TextInput
+            placeholder="Enter Charge Per User"
+            value={chargePerUser}
+            onChange={(e) => setChargePerUser(e.target.value)}
+            type="number"
+            min="0"
+            step="0.01"
+            icon={() => "$"}
+            className="flex-1"
+          />
         </div>
 
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
@@ -183,7 +228,7 @@ export default function SalesBarChart() {
             className="mt-6 hidden h-96 sm:block [&_rect]:fill-blue-500 text-gray-600 dark:text-gray-200"
             customTooltip={(props) => (
               <div className="p-2 bg-white dark:bg-gray-800 shadow rounded">
-                {valueFormatter(props?.payload?.[0]?.value as number)}
+                {valueFormatter(props?.payload?.[0]?.value as number, false)}
               </div>
             )}
           />
@@ -201,7 +246,7 @@ export default function SalesBarChart() {
           className="mt-4 h-72 sm:hidden bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-200 rounded-lg"
           customTooltip={(props) => (
             <div className="p-2 bg-white dark:bg-gray-800 shadow rounded">
-              {valueFormatter(props?.payload?.[0]?.value as number)}
+              {valueFormatter(props?.payload?.[0]?.value as number, false)}
             </div>
           )}
         />
