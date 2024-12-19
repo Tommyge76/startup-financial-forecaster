@@ -50,13 +50,11 @@ function getRevenueForecast(
 }
 
 function getNextMonthRevenue(
+  revenueFirstMonth: number,
   previousRevenue: number,
-  leadAcquisitionCost: number,
-  leadToUserConversionRate: number,
-  paidUserConversionRate: number,
-  chargePerUser: number
+  churn_rate : number
 ) {
-  return previousRevenue * 1.1;
+  return revenueFirstMonth + (previousRevenue * (1 - (churn_rate / 100)));
 }
 
 const dates = getNext12MonthNamesWithYear();
@@ -120,33 +118,30 @@ export default function RevenueBarChart() {
   const [chargePerUser, setChargePerUser] = useState<string>('');
   const [selectedValue, setSelectedValue] = useState<number | null>(null);
   const [chartData, setChartData] = useState(data); // Initial data
+  const [churnRate, setChurnRate] = useState<string>('');
 
   useEffect(() => {
-    if (leadCost && conversionRate) {
-      const newData = dates.reduce((acc, date, index) => {
-        const amount = index === 0 
-          ? getRevenueForecast(
-              parseFloat(adSpend || '0'),
-              parseFloat(leadCost),
-              parseFloat(conversionRate),
-              parseFloat(paidConversionRate),
-              parseFloat(chargePerUser)
-            )
-          : getNextMonthRevenue(
-              acc[index - 1].amount,
-              parseFloat(leadCost),
-              parseFloat(conversionRate),
-              parseFloat(paidConversionRate),
-              parseFloat(chargePerUser)
-            );
-        
-        acc.push({ date, amount });
-        return acc;
-      }, [] as { date: string; amount: number }[]);
+    const newData = dates.reduce((acc, date, index) => {
+      const amount = index === 0 
+        ? getRevenueForecast(
+            parseFloat(adSpend || '0'),
+            parseFloat(leadCost || '0'),
+            parseFloat(conversionRate || '0'),
+            parseFloat(paidConversionRate || '0'),
+            parseFloat(chargePerUser || '0')
+          )
+        : getNextMonthRevenue(
+            acc[0].amount,
+            acc[index - 1].amount,
+            parseFloat(churnRate || '0')
+          );
+      
+      acc.push({ date, amount });
+      return acc;
+    }, [] as { date: string; amount: number }[]);
 
-      setChartData(newData);
-    }
-  }, [leadCost, conversionRate, adSpend, paidConversionRate, chargePerUser]);
+    setChartData(newData);
+  }, [leadCost, conversionRate, adSpend, paidConversionRate, chargePerUser, churnRate]);
 
   return (
     <>
@@ -156,58 +151,98 @@ export default function RevenueBarChart() {
         </h3>
         
         <div className="mt-4 mb-6 flex flex-col sm:flex-row gap-4">
-          <TextInput
-            placeholder="Enter ad spend"
-            value={adSpend}
-            onChange={(e) => setAdSpend(e.target.value)}
-            type="number"
-            min="0"
-            step="0.01"
-            icon={() => "$"}
-            className="flex-1"
-          />
-          <TextInput
-            placeholder="Enter lead acquisition cost"
-            value={leadCost}
-            onChange={(e) => setLeadCost(e.target.value)}
-            type="number"
-            min="0"
-            step="0.01"
-            icon={() => "$"}
-            className="flex-1"
-          />
-          <TextInput
-            placeholder="Enter Lead User Conversion Rate"
-            value={conversionRate}
-            onChange={(e) => setConversionRate(e.target.value)}
-            type="number"
-            min="0"
-            max="100"
-            step="0.1"
-            icon={() => "%"}
-            className="flex-1"
-          />
-          <TextInput
-            placeholder="Enter Paid User Conversion Rate"
-            value={paidConversionRate}
-            onChange={(e) => setPaidConversionRate(e.target.value)}
-            type="number"
-            min="0"
-            max="100"
-            step="0.1"
-            icon={() => "%"}
-            className="flex-1"
-          />
-          <TextInput
-            placeholder="Enter Charge Per User"
-            value={chargePerUser}
-            onChange={(e) => setChargePerUser(e.target.value)}
-            type="number"
-            min="0"
-            step="0.01"
-            icon={() => "$"}
-            className="flex-1"
-          />
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-2 text-gray-600 dark:text-gray-400">
+              Ad Spend
+            </label>
+            <TextInput
+              placeholder="Enter ad spend"
+              value={adSpend}
+              onChange={(e) => setAdSpend(e.target.value)}
+              type="number"
+              min="0"
+              step="0.01"
+              icon={() => "$"}
+            />
+          </div>
+
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-2 text-gray-600 dark:text-gray-400">
+              Lead Acquisition Cost
+            </label>
+            <TextInput
+              placeholder="Enter lead acquisition cost"
+              value={leadCost}
+              onChange={(e) => setLeadCost(e.target.value)}
+              type="number"
+              min="0"
+              step="0.01"
+              icon={() => "$"}
+            />
+          </div>
+
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-2 text-gray-600 dark:text-gray-400">
+              Lead User Conversion Rate
+            </label>
+            <TextInput
+              placeholder="Enter Lead User Conversion Rate"
+              value={conversionRate}
+              onChange={(e) => setConversionRate(e.target.value)}
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              icon={() => "%"}
+            />
+          </div>
+
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-2 text-gray-600 dark:text-gray-400">
+              Paid User Conversion Rate
+            </label>
+            <TextInput
+              placeholder="Enter Paid User Conversion Rate"
+              value={paidConversionRate}
+              onChange={(e) => setPaidConversionRate(e.target.value)}
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              icon={() => "%"}
+            />
+          </div>
+
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-2 text-gray-600 dark:text-gray-400">
+              Charge Per User
+            </label>
+            <TextInput
+              placeholder="Enter Charge Per User"
+              value={chargePerUser}
+              onChange={(e) => setChargePerUser(e.target.value)}
+              type="number"
+              min="0"
+              step="0.01"
+              icon={() => "$"}
+            />
+          </div>
+
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-2 text-gray-600 dark:text-gray-400">
+              Churn Rate
+            </label>
+            <TextInput
+              placeholder="Enter Churn Rate"
+              value={churnRate}
+              onChange={(e) => setChurnRate(e.target.value)}
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              icon={() => "%"}
+            />
+          </div>
         </div>
 
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
@@ -225,9 +260,9 @@ export default function RevenueBarChart() {
               '--tw-ring-color': 'rgb(59, 130, 246)',
               fill: 'rgb(59, 130, 246)'
             } as React.CSSProperties}
-            className="mt-6 hidden h-96 sm:block [&_rect]:fill-blue-500 text-gray-600 dark:text-gray-200"
+            className="mt-6 hidden h-96 sm:block [&_rect]:fill-blue-500 [&_text]:fill-black [&_text]:text-black dark:[&_text]:fill-black dark:[&_text]:text-black [&_rect:hover]:fill-blue-600"
             customTooltip={(props) => (
-              <div className="p-2 bg-white dark:bg-gray-800 shadow rounded">
+              <div className="p-2 bg-white dark:bg-gray-800 shadow-lg shadow-gray-400/50 dark:shadow-gray-900/50 rounded">
                 {valueFormatter(props?.payload?.[0]?.value as number, false)}
               </div>
             )}
@@ -243,9 +278,9 @@ export default function RevenueBarChart() {
           showLegend={false}
           onValueChange={(v) => setSelectedValue(v?.amount as number)}
           showYAxis={false}
-          className="mt-4 h-72 sm:hidden bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-200 rounded-lg"
+          className="mt-4 h-72 sm:hidden bg-white dark:bg-gray-800 [&_text]:fill-black [&_text]:text-black dark:[&_text]:fill-black dark:[&_text]:text-black [&_rect:hover]:fill-blue-600 rounded-lg"
           customTooltip={(props) => (
-            <div className="p-2 bg-white dark:bg-gray-800 shadow rounded">
+            <div className="p-2 bg-white dark:bg-gray-800 shadow-lg shadow-gray-400/50 dark:shadow-gray-900/50 rounded">
               {valueFormatter(props?.payload?.[0]?.value as number, false)}
             </div>
           )}
