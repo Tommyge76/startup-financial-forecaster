@@ -1,6 +1,7 @@
 import Image from "next/image";
 import SalesBarChart from "./ui/dashboard/components/barchart";
 import RevenueBarChart from "./ui/dashboard/components/barchart";
+import Chat from "./ui/chat/chat";
 
 export default function Home() {
   return (
@@ -9,6 +10,9 @@ export default function Home() {
       <main className="flex-1 p-8">
         <div className="w-full h-full">
           <RevenueBarChart/>
+        </div>
+        <div className="w-full h-full">
+          <Chat />
         </div>
       </main>
     </div>
