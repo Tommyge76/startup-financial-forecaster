@@ -1,13 +1,13 @@
 import Image from "next/image";
-import SalesBarChart from "./ui/dashboard/barchart";
-import RevenueBarChart from "./ui/dashboard/barchart";
+import SalesBarChart from "./ui/dashboard/components/barchart";
+import RevenueBarChart from "./ui/dashboard/components/barchart";
 
 export default function Home() {
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900">
       {/* Main Content */}
       <main className="flex-1 p-8">
-        <div className="w-full">
+        <div className="w-full h-full">
           <RevenueBarChart/>
         </div>
       </main>

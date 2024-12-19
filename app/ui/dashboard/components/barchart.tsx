@@ -48,7 +48,6 @@ function getRevenueForecast(
   
   return revenue;
 }
-
 function getNextMonthRevenue(
   revenueFirstMonth: number,
   previousRevenue: number,
@@ -109,7 +108,6 @@ const data = [
     amount: 0
   },
 ];
-
 export default function RevenueBarChart() {
   const [leadCost, setLeadCost] = useState<string>('');
   const [conversionRate, setConversionRate] = useState<string>('');
@@ -142,13 +140,12 @@ export default function RevenueBarChart() {
 
     setChartData(newData);
   }, [leadCost, conversionRate, adSpend, paidConversionRate, chargePerUser, churnRate]);
-
   return (
     <>
       <Card className="sm:mx-auto sm:max-w-7xl">
-        <h3 className="ml-1 mr-1 font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
-          Revenue Forecast
-        </h3>
+      <h3 className="ml-1 mr-1 font-semibold text-2xl text-tremor-content-strong dark:text-dark-tremor-content-strong">
+        Revenue Forecast
+      </h3>
         
         <div className="mt-4 mb-6 flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
@@ -260,7 +257,7 @@ export default function RevenueBarChart() {
               '--tw-ring-color': 'rgb(59, 130, 246)',
               fill: 'rgb(59, 130, 246)'
             } as React.CSSProperties}
-            className="mt-6 hidden h-96 sm:block [&_rect]:fill-blue-500 [&_text]:fill-black [&_text]:text-black dark:[&_text]:fill-black dark:[&_text]:text-black [&_rect:hover]:fill-blue-600"
+            className="mt-6 hidden h-96 sm:block [&_rect]:fill-blue-500 [&_text]:fill-foreground [&_text]:text-foreground dark:[&_text]:fill-foreground dark:[&_text]:text-foreground [&_rect:hover]:fill-blue-600"
             customTooltip={(props) => (
               <div className="p-2 bg-white dark:bg-gray-800 shadow-lg shadow-gray-400/50 dark:shadow-gray-900/50 rounded">
                 {valueFormatter(props?.payload?.[0]?.value as number, false)}

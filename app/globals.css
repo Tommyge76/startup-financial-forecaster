@@ -29,4 +29,12 @@ input[type="number"]::-webkit-outer-spin-button {
 
 input[type="number"] {
   -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+input, 
+input[type="text"],
+input[type="number"],
+textarea {
+  color: black !important;
 }
