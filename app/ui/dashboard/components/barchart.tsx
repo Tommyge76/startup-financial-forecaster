@@ -142,7 +142,7 @@ export default function RevenueBarChart() {
   }, [leadCost, conversionRate, adSpend, paidConversionRate, chargePerUser, churnRate]);
   return (
     <>
-      <Card className="sm:mx-auto sm:max-w-7xl">
+      <Card className="sm:mx-auto sm:max-w-7xl bg-transparent">
       <h3 className="ml-1 mr-1 font-semibold text-2xl text-tremor-content-strong dark:text-dark-tremor-content-strong">
         Revenue Forecast
       </h3>
